@@ -43,6 +43,7 @@ void free_list(linked_list* list){
 
 
 ssize_t get_length(linked_list* list){
+    if (list==NULL) return -1;
     return list->length;
 }
 

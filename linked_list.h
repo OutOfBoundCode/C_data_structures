@@ -1,7 +1,7 @@
 #pragma once
 
 struct node {
-    int value;
+    void* value;
     struct node* next;
 };
 
@@ -14,24 +14,24 @@ typedef struct linked_list {
 } linked_list ;
 
 
-node *create_node(int initvalue);
+node *create_node(void* element); 
 
 linked_list *create_linked_list();
 
-void free_list(linked_list *list);
+void free_list(linked_list *list, void (*free_value)(void*));
 
-ssize_t get_index(const linked_list *list, int element);
+ssize_t get_index(const linked_list *list, void* element, int (*compare) (void*, void*)); 
 
-void print_list(const linked_list *list);
+void print_list(const linked_list *list, void (*print_node) (void*)); 
 
 void reverse_list(linked_list *list);
 
-node *get_node_index(const linked_list *base, int index);
+node *get_node_index(const linked_list *base, ssize_t index);
 
-void append_node(linked_list *base, int value);
+int append_node(linked_list *base, void* element);  
 
-void add_node_index(linked_list *base, int index, int value);
+int add_node_index(linked_list *base, ssize_t index, void* element); 
 
-void delete_last_node(linked_list *list);
+int delete_last_node(linked_list *list, void (*free_value)(void*));
 
-void delete_node_index(linked_list *list, int index);
+int delete_node_index(linked_list *list, ssize_t index, void (*free_value)(void*));

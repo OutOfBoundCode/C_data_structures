@@ -1,21 +1,24 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
 #include "linked_list.h"
 
 
-node* create_node(int value){
-    node* node = malloc(sizeof(node));
+node* create_node(void* element){
+    if (element == NULL) return NULL;
+
+    node* n = malloc(sizeof(node));
     
-    if (node == NULL) return NULL;
+    if (n == NULL) return NULL;
     
-    node->value = value;
-    node->next = NULL;
+    n->value = element;
+    n->next = NULL;
     
-    return node;
+    return n;
 }
 
 linked_list* create_linked_list(){
-    linked_list*  list = malloc(sizeof(linked_list));
+    linked_list* list = malloc(sizeof(linked_list));
     
     if (list == NULL) return NULL;
     
@@ -26,15 +29,15 @@ linked_list* create_linked_list(){
     return list;
 }
 
-void free_list(linked_list* list){
+void free_list(linked_list* list, void (*free_value)(void*)){
     if (list == NULL) return;
     
     node* delete_pointer = list->head;
     node* temp_next; 
     
     while (delete_pointer != NULL){
-
         temp_next = delete_pointer->next;
+        if (free_value != NULL) free_value(delete_pointer->value);
         free(delete_pointer);
         delete_pointer = temp_next;
     }
@@ -44,15 +47,22 @@ void free_list(linked_list* list){
 
 
 
-ssize_t get_index(const linked_list* list, int element){
-    if (list == NULL) return -1;
+ssize_t get_index(const linked_list* list, void* element, int (*compare) (void*, void*)) 
+{ 
+    if (list == NULL || element == NULL) return -1;
     
     node* current = list->head;
     ssize_t current_index = 0;
     
     while (current != NULL) {
-        if (current->value == element) return current_index;
-                
+        if (compare != NULL) {
+            if (compare(current->value, element) == 0) return current_index;
+        }
+
+        else {
+            if (current->value == element) return current_index;
+        }
+        
         current = current->next;
         current_index++;
     }
@@ -60,8 +70,8 @@ ssize_t get_index(const linked_list* list, int element){
     return -1;
 }
 
-void print_list(const linked_list* list){
-    if (list == NULL || list->head == NULL) {
+void print_list(const linked_list* list, void (*print_node) (void*)){
+    if (list == NULL || list->length == 0 || print_node == NULL) {
         printf("[]\n");
         return;
     }
@@ -70,12 +80,13 @@ void print_list(const linked_list* list){
     
     printf("[");
     
-    while (current->next != NULL) {
-        printf("%d, ", current->value);
+    while (current != NULL) {
+        print_node(current->value);
         current = current->next;
+        printf(", ");
     }
     
-    printf("%d]\n",current->value);
+    printf("\b\b]\n");
 }
 
 void reverse_list(linked_list* list){
@@ -99,16 +110,14 @@ void reverse_list(linked_list* list){
     list->tail = temp_head;
 }
 
-node* get_node_index(const linked_list* list, int index){
+node* get_node_index(const linked_list* list, ssize_t index){
     if (list == NULL) return NULL;
     if (index < 0) return NULL;
-    if (index >= list->length) {
-        fprintf(stderr, "Index %d out of bounds\n", index);
-        return NULL;
-    }
+    if (index >= list->length) return NULL;
+
     
     node* current = list->head;
-    int current_index = 0;
+    ssize_t current_index = 0;
 
      while (current != NULL && current_index < index) {
         current = current->next;
@@ -118,29 +127,26 @@ node* get_node_index(const linked_list* list, int index){
     return current;
 }
 
-void append_node(linked_list*  list, int value){
-    add_node_index(list, list->length, value);
+int append_node(linked_list*  list, void* element){
+    return add_node_index(list, list->length, element);
 }
 
 
-void add_node_index(linked_list*  list, int index, int value){
-    if (list == NULL) return;
+int add_node_index(linked_list*  list, ssize_t index, void* element){
+    if (list == NULL) return -1;
 
-    if (index < 0 || index > list->length) {
-        fprintf(stderr, "Index %d out of bounds\n", index);
-        return;
-    }
+    if (index < 0 || index > list->length) return -1;
+    
+    node* newnode = create_node(element);
 
-    node* newnode = create_node(value);
-
-    if (newnode == NULL) return;
+    if (newnode == NULL) return -1;
 
     if (list->length == 0){
         list->head = newnode;
         list->tail = newnode;
         list->length++;   
         
-        return;
+        return 0;
     }
 
     if (index == 0) {
@@ -148,7 +154,7 @@ void add_node_index(linked_list*  list, int index, int value){
         list->head = newnode;
         list->length++;
        
-        return;
+        return 0;
     }
    
     if (index == list->length){
@@ -156,12 +162,12 @@ void add_node_index(linked_list*  list, int index, int value){
         list->tail = newnode;
         list->length++;
         
-        return;
+        return 0;
     }
 
     node*  prenode = get_node_index(list, index-1);
     
-    if (prenode == NULL) return;
+    if (prenode == NULL) return -1;
     
     node*  postnode = prenode->next;
     
@@ -169,58 +175,63 @@ void add_node_index(linked_list*  list, int index, int value){
     newnode->next = postnode;
     
     list->length++;
+    
+    return 0;
 }
 
-void delete_last_node(linked_list*  list){
-    delete_node_index(list, list->length-1);
+int delete_last_node(linked_list*  list, void (*free_value)(void*)){
+    return delete_node_index(list, list->length-1, free_value);
 }
 
-void delete_node_index(linked_list*  list, int index){
-    if (list == NULL) return;
+int delete_node_index(linked_list*  list, ssize_t index, void (*free_value)(void*)){
+    if (list == NULL) return -1;
    
-    if (index < 0 || index >= list->length) {
-        fprintf(stderr, "Index %d out of bounds\n", index);
-        return;
-    }
+    if (index < 0 || index >= list->length) return -1;
     
     // check if the list one element
-    if (list->length == 1 && index == 0) {   
+    if (list->length == 1 && index == 0) {
+        if (free_value != NULL) free_value(list->head->value);
         free(list->head);
         list->head = NULL;
         list->tail = NULL;
         list->length--;
-        return;
+        return 0;
     }
 
     // handle head deletion
     if (index == 0){
         node* oldhead = list->head;
         list->head = list->head->next;
+        if (free_value != NULL) free_value(oldhead->value);
         free(oldhead);
         list->length--;
-        return;
+        return 0;
     }
     
     // handle tail deletion
     if (index == list->length-1){
         node* old_tail = list->tail; 
         node* pretail = get_node_index(list, list->length-2); // lengt-2 to get the pre-tail node
-        if (pretail==NULL) return;
+        if (pretail==NULL) return -1;
         list->tail = pretail;
-        list->tail->next = NULL;
+        list->tail->next = NULL; 
+        if (free_value != NULL) free_value(old_tail->value);
         free(old_tail);
         list->length--;
-        return;
+        return 0;
     }
 
     node* prenode = get_node_index(list,index-1);
     
-    if (prenode == NULL) return;
+    if (prenode == NULL) return -1;
       
     node* deleted_node = prenode->next;
     node* postnode = prenode->next->next;
     
     prenode->next = postnode;
+    if (free_value != NULL) free_value(deleted_node->value);
     free(deleted_node);
     list->length--;
+
+    return 0;
 }

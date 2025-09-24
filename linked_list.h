@@ -26,12 +26,12 @@ void print_list(const linked_list *list, void (*print_node) (void*));
 
 void reverse_list(linked_list *list);
 
-node *get_node_index(const linked_list *base, ssize_t index);
+node *get(const linked_list *base, ssize_t index);
 
-int append_node(linked_list *base, void* element);  
+int append(linked_list *base, void* element);  
 
-int add_node_index(linked_list *base, ssize_t index, void* element); 
+int add(linked_list *base, ssize_t index, void* element); 
 
-int delete_last_node(linked_list *list, void (*free_value)(void*));
+int pop(linked_list *list, void (*free_value)(void*));
 
-int delete_node_index(linked_list *list, ssize_t index, void (*free_value)(void*));
+int delete(linked_list *list, ssize_t index, void (*free_value)(void*));

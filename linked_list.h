@@ -10,7 +10,7 @@ typedef struct node node;
 typedef struct linked_list {
     node* head;
     node* tail;
-    size_t length;
+    ssize_t length;
 } linked_list ;
 
 
@@ -26,11 +26,11 @@ void print_list(const linked_list *list, void (*print_node) (void*));
 
 void reverse_list(linked_list *list);
 
-node *get(const linked_list *base, ssize_t index);
+node *get(const linked_list *list, ssize_t index);
 
-int append(linked_list *base, void* element);  
+int append(linked_list *list, void* element);  
 
-int add(linked_list *base, ssize_t index, void* element); 
+int add(linked_list *list, ssize_t index, void* element); 
 
 int pop(linked_list *list, void (*free_value)(void*));
 

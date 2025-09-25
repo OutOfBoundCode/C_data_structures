@@ -49,20 +49,14 @@ void free_list(linked_list* list, void (*free_value)(void*)){
 
 ssize_t get_index(const linked_list* list, void* element, int (*compare) (void*, void*)) 
 { 
-    if (list == NULL || element == NULL) return -1;
+    if (list == NULL || element == NULL || compare == NULL) return -1;
     
     node* current = list->head;
     ssize_t current_index = 0;
     
     while (current != NULL) {
-        if (compare != NULL) {
-            if (compare(current->value, element) == 0) return current_index;
-        }
+        if (compare(current->value, element) == 0) return current_index;
 
-        else {
-            if (current->value == element) return current_index;
-        }
-        
         current = current->next;
         current_index++;
     }

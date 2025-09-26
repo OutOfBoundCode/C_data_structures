@@ -26,7 +26,7 @@ array_list* create_array_list(ssize_t array_size){
     return list;
 }
 
-void free_list(array_list *list, void (*free_value) (void*)){
+void free_array_list(array_list *list, void (*free_value) (void*)){
     if (list == NULL) return;
     
     ssize_t current_index = 0;
@@ -41,7 +41,7 @@ void free_list(array_list *list, void (*free_value) (void*)){
     free(list);
 }
 
-ssize_t get_index(const array_list *list, void *element, int (*compare)(void *, void *)){
+ssize_t get_element_index(const array_list *list, void *element, int (*compare)(void *, void *)){
     if (list == NULL || element == NULL || compare == NULL) return -1;
    
     ssize_t current_index = 0;
@@ -56,7 +56,7 @@ ssize_t get_index(const array_list *list, void *element, int (*compare)(void *, 
     return -1;
 }
 
-void print_list(const array_list *list, void (*print_element)(void *)){
+void print_array_list(const array_list *list, void (*print_element)(void *)){
    if (list == NULL || list->length == 0 || print_element == NULL) {
         printf("[]\n");
         return;
@@ -81,7 +81,7 @@ void swap(void** ptr1, void** ptr2){
     *ptr2 = temp;
 }
 
-void reverse_list(array_list *list){
+void reverse_array_list(array_list *list){
     if (list == NULL) return; 
     
     ssize_t index1 = 0, index2 = list->length - 1; // set to pointing indexes to swap elements
@@ -93,7 +93,7 @@ void reverse_list(array_list *list){
     }
 }
 
-void *get(const array_list *list, ssize_t index){
+void *get_element(const array_list *list, ssize_t index){
     if (list == NULL || index < 0 || index >= list->length) return NULL;
     return list->arr[index];
 }
@@ -106,7 +106,7 @@ int resize_list(array_list* list){
     return 0;
 }
 
-int append(array_list *list, void* element){
+int append_element(array_list *list, void* element){
     if (list == NULL || element == NULL) return -1;
     if (list->length >= list->max_size)
         if (resize_list(list) == -1) return -1; 
@@ -117,7 +117,7 @@ int append(array_list *list, void* element){
     return 0;
 }
 
-int add(array_list *list, ssize_t index, void* element){
+int add_element(array_list *list, ssize_t index, void* element){
     if (list == NULL || element == NULL || index > list->length) return -1;
     if (list->length >= list->max_size)
         if (resize_list(list) == -1) return -1; 
@@ -132,7 +132,7 @@ int add(array_list *list, ssize_t index, void* element){
     return 0;
 }
 
-int pop(array_list *list, void (*free_value)(void*)){
+int pop_element(array_list *list, void (*free_value)(void*)){
     if (list == NULL) return -1;
     if (list->length <= 0) return -1;
 
@@ -144,7 +144,7 @@ int pop(array_list *list, void (*free_value)(void*)){
     return 0;
 }
 
-int delete(array_list *list, ssize_t index, void (*free_value)(void*)){
+int delete_element(array_list *list, ssize_t index, void (*free_value)(void*)){
     if (list == NULL || index >= list->length) return -1;
     
     if (free_value != NULL)

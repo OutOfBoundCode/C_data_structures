@@ -18,7 +18,7 @@ node *create_node(void* element);
 
 linked_list *create_linked_list();
 
-void free_linked_list(linked_list *list, void (*free_value)(void*));
+int free_linked_list(linked_list *list, void (*free_value)(void*));
 
 ssize_t get_node_index(const linked_list *list, void* element, int (*compare) (void*, void*)); 
 

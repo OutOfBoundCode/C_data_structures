@@ -29,8 +29,8 @@ linked_list* create_linked_list(){
     return list;
 }
 
-void free_linked_list(linked_list* list, void (*free_value)(void*)){
-    if (list == NULL) return;
+int free_linked_list(linked_list* list, void (*free_value)(void*)){
+    if (list == NULL) return -1;
     
     node* delete_pointer = list->head;
     node* temp_next; 
@@ -43,6 +43,8 @@ void free_linked_list(linked_list* list, void (*free_value)(void*)){
     }
 
     free(list);
+
+    return 0;
 }
 
 

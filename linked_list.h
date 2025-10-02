@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/types.h>
+
 struct node {
     void* value;
     struct node* next;
@@ -18,20 +20,24 @@ node *create_node(void* element);
 
 linked_list *create_linked_list();
 
-int free_linked_list(linked_list *list, void (*free_value)(void*));
+int free_linked_list(linked_list *list, void (*free_element)(void*));
 
-ssize_t get_node_index(const linked_list *list, void* element, int (*compare) (void*, void*)); 
+ssize_t llget_index(const linked_list *list, void* element, int (*compare) (void*, void*)); 
 
-void print_linked_list(const linked_list *list, void (*print_node) (void*)); 
+void llprint(const linked_list *list, void (*print_node) (void*)); 
 
-void reverse_linked_list(linked_list *list);
+void llreverse(linked_list *list);
 
-node *get_node(const linked_list *list, ssize_t index);
+node *llget_node(const linked_list *list, ssize_t index);
 
-int append_node(linked_list *list, void* element);  
+void *llget(const linked_list *list, ssize_t index);
 
-int add_node(linked_list *list, ssize_t index, void* element); 
+int llset(linked_list *list, ssize_t index, void* element, void (*free_element) (void*));
 
-int pop_node(linked_list *list, void (*free_value)(void*));
+int llappend(linked_list *list, void* element);  
 
-int delete_node(linked_list *list, ssize_t index, void (*free_value)(void*));
+int lladd(linked_list *list, ssize_t index, void* element); 
+
+int llpop(linked_list *list, void (*free_element)(void*));
+
+int lldelete(linked_list *list, ssize_t index, void (*free_element)(void*));

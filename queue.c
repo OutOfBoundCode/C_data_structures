@@ -20,7 +20,7 @@ queue* create_queue(){
 int enqueue(queue* qu, void* element){
     if (qu == NULL) return -1;
 
-    int success = append_node(qu->list, element);
+    int success = llappend(qu->list, element);
 
     return success;
 }
@@ -32,7 +32,7 @@ void* dequeue(queue* qu){
 
     void* val = qu->list->head->value;
 
-    int success = delete_node(qu->list, 0, NULL);
+    int success = lldelete(qu->list, 0, NULL);
 
     return (success == 0 ? val : NULL);
 }

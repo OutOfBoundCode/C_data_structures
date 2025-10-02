@@ -23,7 +23,7 @@ typedef struct linked_list {
 
 /**
  * @brief Create a new node.
- * @param element Pointer to the data to store in the node.
+ * @param element Pointer to the data to store in the node (can't be NULL).
  * @return Pointer to the newly created node, -1 on failure.
  */
 node *create_node(void* element);

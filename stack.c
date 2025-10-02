@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include "array_list.h"
 #include "stack.h"
 
@@ -21,21 +22,25 @@ stack* create_stack(ssize_t init_size){
 int stack_push(stack* stck, void* element){
     if (stck == NULL) return -1;
 
-    int success = append_element(stck->arr, element);
+    int success = alappend(stck->arr, element);
     
     return success;
 }
 
 void* stack_pop(stack* stck){
     if (stck == NULL || stck->arr->length <= 0) return NULL;
+ 
+    void* popped = alget(stck->arr, stck->arr->length - 1);
 
-    return get_element(stck->arr, --stck->arr->length);
+    stck->arr->length--;
+
+    return popped;
 }
 
 void* stack_peek(stack* stck){
     if (stck == NULL || stck->arr->length <= 0) return NULL;
    
-    return get_element(stck->arr, stck->arr->length - 1);
+    return alget(stck->arr, stck->arr->length - 1);
 }
 
 int free_stack(stack *stck, void (*free_element) (void*)){

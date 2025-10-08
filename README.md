@@ -72,7 +72,7 @@ Additional data structures are planned for future releases.
 - to compile a test, move to test/ and run the following command:
 
 ```bash
-gcc -std=c11 -Wall -Wextra -I.. -o test/test_name ./file_name test/test_file_name
+gcc -std=c11 -Wall -Wextra -I.. -o ./test_name ../file_name ./test_file_name
 ./test_name
 ```
 
@@ -81,7 +81,7 @@ replace `test_name` by any name you want for the output executable, and replace 
 *Note:* for data structures that depend on other data structure like queue/stack, we should compile the depended files.
 - Example for compiling stack test.
 ```bash
-gcc -std=c11 -Wall -Wextra -I.. -o test/stack_test ./array_list.c ./stack.c test/stack_test.c
+gcc -std=c11 -Wall -Wextra -I.. -o ./stack_test ../array_list.c ../stack.c ./stack_test.c
 ./stack_test
 ```
 

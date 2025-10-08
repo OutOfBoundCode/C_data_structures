@@ -78,6 +78,13 @@ gcc -std=c11 -Wall -Wextra -I.. -o test/test_name ./file_name test/test_file_nam
 
 replace `test_name` by any name you want for the output executable, and replace `file_name` with the name of the C file that contain the implantation of the data structure (e.g. ./linked_list.c), and replace `test_file_name` with the name of the test file for that specific data structure (e.g. linked_list_test.c).
 
+*Note:* for data structures that depend on other data structure like queue/stack, we should compile the depended files.
+- Example for compiling stack test.
+```bash
+gcc -std=c11 -Wall -Wextra -I.. -o test/stack_test ./array_list.c ./stack.c test/stack_test.c
+./stack_test
+```
+
 ---
 
 ## notes

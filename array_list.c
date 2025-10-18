@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -108,19 +109,26 @@ int alset(array_list *list, ssize_t index, void *element, void (*free_element) (
     return 0;
 }
 
-int resize_list(array_list* list){
+int resize_list(array_list* list, float factor){
     if (list == NULL) return -1;
-    void **new_arr = realloc(list->arr, list->max_size * 2 * sizeof(void*)); // resizing the array to double the old size
+    size_t new_size =  (size_t)(list->max_size * factor);
+    
+    if (new_size < 1) new_size = 1;
+
+    void **new_arr = realloc(list->arr, new_size * sizeof(void*)); // resizing the array by factor
+
     if (new_arr == NULL) return -1;
+    
     list->arr = new_arr;  
-    list->max_size *= 2;
+    
+    list->max_size = new_size;
     return 0;
 }
 
 int alappend(array_list *list, void* element){
     if (list == NULL || element == NULL) return -1;
     if (list->length >= list->max_size)
-        if (resize_list(list) == -1) return -1; 
+        if (resize_list(list, 2) == -1) return -1; // double the array size 
 
     list->arr[list->length] = element;
     list->length++;
@@ -131,7 +139,7 @@ int alappend(array_list *list, void* element){
 int aladd(array_list *list, ssize_t index, void* element){
     if (list == NULL || element == NULL || index < 0 || index > list->length) return -1;
     if (list->length >= list->max_size)
-        if (resize_list(list) == -1) return -1; 
+        if (resize_list(list, 2) == -1) return -1; // double the array size
 
     void* dest = &list->arr[index + 1];
     void* src = &list->arr[index];
@@ -153,6 +161,9 @@ int alpop(array_list *list, void (*free_element)(void*)){
 
     list->length--;
 
+    if (list->length <= (int) (0.25 * list->max_size))
+        if (resize_list(list, 0.5) == -1) return -1; // shrink the array to half the size 
+
     return 0;
 }
 
@@ -164,10 +175,13 @@ int aldelete(array_list *list, ssize_t index, void (*free_element)(void*)){
     void* dest = &list->arr[index];
     void* src = &list->arr[index + 1];
     size_t copy_size = ((list->length - 1) - index) * sizeof(void*); // calculating how many bytes to shift
-   
+
     memmove(dest, src , copy_size);
 
     list->length--;
+
+    if (list->length <= (int) (0.25 * list->max_size))
+        if (resize_list(list, 0.5) == -1) return -1; // shrink the array to half the size 
 
     return 0;
 }

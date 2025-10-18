@@ -417,6 +417,28 @@ void test_stress_operations() {
     printf("stress test: PASS\n");
 }
 
+void test_resize_list(){
+    array_list* list = create_array_list(4);
+    assert(list != NULL);
+    assert(list->max_size == 4); // check the initial size
+    
+    // triger resize by adding 5 elements
+    for (int i = 0; i < 5; i++){
+        alappend(list, make_element_int(i));
+    }
+
+    assert(list->max_size == 8); // checks if the max_size doubles
+    
+    alpop(list, free_int); // length 4
+    alpop(list, free_int); // length 3
+    alpop(list, free_int); // length 2
+        
+    assert(list->max_size == 4); // the list should shrink to half
+
+    free_array_list(list, free_int);
+    printf("resize test: PASS\n");
+}
+
 // ----------------- Main -----------------
 
 int main(void) {
@@ -431,6 +453,7 @@ int main(void) {
     test_reverse();
     test_get_index();
     test_print();
+    test_resize_list();
     test_stress_operations();
     printf("✅ All array_list tests passed!\n");
     return 0;

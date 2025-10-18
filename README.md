@@ -59,7 +59,7 @@ free_linked_list(list, NULL); // pass NULL for the free function pointer to avoi
 
 - Dynamic array-based list.  
 - Supports append, insert, delete, and element retrieval.  
-- Resizable on demand.  
+- Resizable on demand (doubles when the list is full (length == max_size) and shrinks to half when the length <= 1/4 max_size).  
 - Generic type support with flexible `void*` element storage.
 
 **Example:**

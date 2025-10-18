@@ -75,6 +75,7 @@ int alset(array_list *list, ssize_t index, void* element, void (*free_element) (
  * @param list Pointer to the array list.
  * @param element Pointer to the element to append.
  * @return 0 on success, -1 on failure.
+ * @note when the length (the count of elements inside) of the array equals the max_size the array doubles its size
  */
 int alappend(array_list *list, void* element);
 
@@ -84,6 +85,7 @@ int alappend(array_list *list, void* element);
  * @param index Index at which to insert the element.
  * @param element Pointer to the element to add.
  * @return 0 on success, -1 on failure.
+ * @note when the length (the count of elements inside) of the array equals the max_size the array doubles its size
  */
 int aladd(array_list *list, ssize_t index, void* element);
 
@@ -93,6 +95,7 @@ int aladd(array_list *list, ssize_t index, void* element);
  * @param free_element Function pointer to free the element (can be NULL).
  * @note Memory ownership rules in free_array_list apply here.
  * @return 0 on success, -1 on failure.
+ * @note when the length (the count of elements inside) of the array is <= 1/4 max_size the array shrinks to half its size
  */
 int alpop(array_list *list, void (*free_element)(void*));
 
@@ -103,6 +106,7 @@ int alpop(array_list *list, void (*free_element)(void*));
  * @param free_element Function pointer to free the element (can be NULL).
  * @note Memory ownership rules in free_array_list apply here.
  * @return 0 on success, -1 on failure.
+ * @note when the length (the count of elements inside) of the array is <= 1/4 max_size the array shrinks to half its size
  */
 int aldelete(array_list *list, ssize_t index, void (*free_element)(void*));
 

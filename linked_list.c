@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include "linked_list.h"
 
-node* create_node(void* element){
+static node* create_node(void* element){
     if (element == NULL) return NULL;
 
     node* n = malloc(sizeof(node));
@@ -16,19 +16,25 @@ node* create_node(void* element){
     return n;
 }
 
-linked_list* create_linked_list(){
+linked_list* create_linked_list(llcpy cpy, llfree_element free_element, llcompare compare){
     linked_list* list = malloc(sizeof(linked_list));
     
     if (list == NULL) return NULL;
+    if (free_element == NULL || cpy == NULL || compare == NULL){
+        free(list);
+        return NULL;
+    }
     
     list->head = NULL;
     list->tail = NULL;
     list->length = 0;
-    
+    list->cpy = cpy;
+    list->free_element = free_element;
+    list->compare = compare;
     return list;
 }
 
-int free_linked_list(linked_list* list, void (*free_element)(void*)){
+int free_linked_list(linked_list* list){
     if (list == NULL) return -1;
     
     node* delete_pointer = list->head;
@@ -36,7 +42,7 @@ int free_linked_list(linked_list* list, void (*free_element)(void*)){
     
     while (delete_pointer != NULL){
         temp_next = delete_pointer->next;
-        if (free_element != NULL) free_element(delete_pointer->value);
+        list->free_element(delete_pointer->value);
         free(delete_pointer);
         delete_pointer = temp_next;
     }
@@ -46,15 +52,14 @@ int free_linked_list(linked_list* list, void (*free_element)(void*)){
     return 0;
 }
 
-ssize_t llget_index(const linked_list* list, void* element, int (*compare) (void*, void*)) 
-{ 
-    if (list == NULL || element == NULL || compare == NULL) return -1;
+ssize_t llget_index(const linked_list* list, void* element) { 
+    if (list == NULL || element == NULL) return -1;
     
     node* current = list->head;
     ssize_t current_index = 0;
     
     while (current != NULL) {
-        if (compare(current->value, element) == 0) return current_index;
+        if (list->compare(current->value, element) == 0) return current_index;
 
         current = current->next;
         current_index++;
@@ -128,16 +133,20 @@ void* llget(const linked_list *list, ssize_t index){
     return nd->value;
 }
 
-int llset(linked_list *list, ssize_t index, void* element, void (*free_element) (void*)){
+int llset(linked_list *list, ssize_t index, void* element){
     if (list == NULL || element == NULL || index < 0 || index >= list->length) return -1;
 
     node* nd = llget_node(list, index);
 
+    void* element_copy = list->cpy(element);
+
+    if (element_copy == NULL) return -1;
+
     if (nd == NULL) return -1;
 
-    if (free_element != NULL) free_element(nd->value);
+    list->free_element(nd->value);
 
-    nd->value = element;
+    nd->value = element_copy;
 
     return 0;
 }
@@ -152,8 +161,12 @@ int lladd(linked_list*  list, ssize_t index, void* element){
     if (list == NULL || element == NULL) return -1;
 
     if (index < 0 || index > list->length) return -1;
+
+    void* element_copy = list->cpy(element);
+
+    if (element_copy == NULL) return -1;
     
-    node* newnode = create_node(element);
+    node* newnode = create_node(element_copy);
 
     if (newnode == NULL) return -1;
 
@@ -195,19 +208,19 @@ int lladd(linked_list*  list, ssize_t index, void* element){
     return 0;
 }
 
-int llpop(linked_list*  list, void (*free_element)(void*)){
+int llpop(linked_list*  list){
     if (list == NULL) return -1;
-    return lldelete(list, list->length-1, free_element);
+    return lldelete(list, list->length-1);
 }
 
-int lldelete(linked_list*  list, ssize_t index, void (*free_element)(void*)){
+int lldelete(linked_list*  list, ssize_t index){
     if (list == NULL) return -1;
    
     if (index < 0 || index >= list->length) return -1;
     
     // check if the list one element
     if (list->length == 1 && index == 0) {
-        if (free_element != NULL) free_element(list->head->value);
+        list->free_element(list->head->value);
         free(list->head);
         list->head = NULL;
         list->tail = NULL;
@@ -219,7 +232,7 @@ int lldelete(linked_list*  list, ssize_t index, void (*free_element)(void*)){
     if (index == 0){
         node* oldhead = list->head;
         list->head = list->head->next;
-        if (free_element != NULL) free_element(oldhead->value);
+        list->free_element(oldhead->value);
         free(oldhead);
         list->length--;
         return 0;
@@ -232,7 +245,7 @@ int lldelete(linked_list*  list, ssize_t index, void (*free_element)(void*)){
         if (pretail==NULL) return -1;
         list->tail = pretail;
         list->tail->next = NULL; 
-        if (free_element != NULL) free_element(old_tail->value);
+        list->free_element(old_tail->value);
         free(old_tail);
         list->length--;
         return 0;
@@ -246,7 +259,7 @@ int lldelete(linked_list*  list, ssize_t index, void (*free_element)(void*)){
     node* postnode = prenode->next->next;
     
     prenode->next = postnode;
-    if (free_element != NULL) free_element(deleted_node->value);
+    list->free_element(deleted_node->value);
     free(deleted_node);
     list->length--;
 

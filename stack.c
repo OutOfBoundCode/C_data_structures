@@ -4,12 +4,12 @@
 #include "array_list.h"
 #include "stack.h"
 
-stack* create_stack(ssize_t init_size){
+stack* create_stack(ssize_t init_size, alcpy cpy, alfree_element free_element, alcompare compare){
     stack* stck = malloc(sizeof(stack));
     
     if (stck == NULL) return NULL;
 
-    stck->arr = create_array_list(init_size);
+    stck->arr = create_array_list(init_size, cpy, free_element, compare);
 
     if (stck->arr == NULL) {
         free(stck);
@@ -43,10 +43,10 @@ void* stack_peek(stack* stck){
     return alget(stck->arr, stck->arr->length - 1);
 }
 
-int free_stack(stack *stck, void (*free_element) (void*)){
+int free_stack(stack *stck){
     if (stck==NULL) return -1;
 
-    free_array_list(stck->arr, free_element);
+    free_array_list(stck->arr);
     free(stck);
 
     return 0;

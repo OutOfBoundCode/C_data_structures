@@ -1,150 +1,140 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../queue.h"  // your queue header
+#include "../queue.h"  // your updated queue header
 
 /******************* Helper functions *******************/
 
+void free_int(void *ptr) {
+    free(ptr);
+}
+
+void* copy_int(void *p) {
+    if (!p) return NULL;
+    int *c = malloc(sizeof(int));
+    if (!c) return NULL;
+    *c = *(int*)p;
+    return c;
+}
+
+int compare_int(void *a, void *b) {
+    if (!a || !b) return -1;
+    return (*(int*)a == *(int*)b) ? 0 : -1;
+}
+
 static queue* create_test_queue(void) {
-    queue *q = create_queue();
+    queue *q = create_queue(copy_int, free_int, compare_int);
     assert(q != NULL);
     return q;
-}
-
-static int* make_int(int value) {
-    int *p = malloc(sizeof(int));
-    assert(p != NULL);
-    *p = value;
-    return p;
-}
-
-static void free_int(void *ptr) {
-    free(ptr);
 }
 
 /******************* Tests *******************/
 
 void test_create_queue(void) {
-    queue *q = create_queue();
+    queue *q = create_test_queue();
     assert(q != NULL);
-    assert(free_queue(q, NULL) == 0);
+    assert(free_queue(q) == 0);
     printf("create queue test: PASS\n");
 }
 
 void test_enqueue(void) {
     queue *q = create_test_queue();
 
-    // Enqueue single element
-    assert(enqueue(q, make_int(10)) == 0);
+    int v1 = 10, v2 = 20, v3 = 30, v4 = 40;
+
+    assert(enqueue(q, &v1) == 0);
     assert(*(int*)queue_front(q) == 10);
 
-    // Enqueue multiple elements
-    assert(enqueue(q, make_int(20)) == 0);
-    assert(enqueue(q, make_int(30)) == 0);
-    assert(*(int*)queue_front(q) == 10); // front should still be first element
+    assert(enqueue(q, &v2) == 0);
+    assert(enqueue(q, &v3) == 0);
+    assert(*(int*)queue_front(q) == 10); // front remains first element
 
-    // Enqueue NULL
-    assert(enqueue(q, NULL) == -1); // should fail
+    assert(enqueue(q, NULL) == -1); // NULL element should fail
 
-    // enqueue on NULL queue
-    int *number = make_int(40);
-    assert(enqueue(NULL, number) == -1); // should fail
-    free_int(number); // queue didn't take ownership
+    assert(enqueue(NULL, &v4) == -1); // enqueue on NULL queue should fail
 
-    free_queue(q, free_int);
+    free_queue(q);
     printf("enqueue test: PASS\n");
 }
 
 void test_dequeue(void) {
     queue *q = create_test_queue();
-
     int *popped = NULL;
 
     // Dequeue empty queue
     assert(dequeue(q) == NULL);
 
-    // Dequeue single element
-    enqueue(q, make_int(10));
+    int v1 = 10;
+    enqueue(q, &v1);
     popped = dequeue(q);
     assert(*popped == 10);
-    free_int(popped);
+    free(popped);
 
-    // Dequeue multiple elements (FIFO order)
-    enqueue(q, make_int(20));
-    enqueue(q, make_int(30));
-    enqueue(q, make_int(40));
+    int v2 = 20, v3 = 30, v4 = 40;
+    enqueue(q, &v2);
+    enqueue(q, &v3);
+    enqueue(q, &v4);
 
     popped = dequeue(q);
     assert(*popped == 20);
-    free_int(popped);
+    free(popped);
 
     popped = dequeue(q);
     assert(*popped == 30);
-    free_int(popped);
+    free(popped);
 
     popped = dequeue(q);
     assert(*popped == 40);
-    free_int(popped);
+    free(popped);
 
-    // Queue is now empty
-    assert(dequeue(q) == NULL);
+    assert(dequeue(q) == NULL);  // queue empty
 
-    // Dequeue on NULL queue
-    assert(dequeue(NULL) == NULL);
+    assert(dequeue(NULL) == NULL); // NULL queue
 
-    free_queue(q, free_int);
+    free_queue(q);
     printf("dequeue test: PASS\n");
 }
 
 void test_queue_front(void) {
     queue *q = create_test_queue();
 
-    // Front on empty queue
-    assert(queue_front(q) == NULL);
+    assert(queue_front(q) == NULL); // empty queue
 
-    // Front after enqueue
-    enqueue(q, make_int(10));
+    int v1 = 10, v2 = 20;
+    enqueue(q, &v1);
     assert(*(int*)queue_front(q) == 10);
 
-    enqueue(q, make_int(20));
-    assert(*(int*)queue_front(q) == 10); // front should still be first element
+    enqueue(q, &v2);
+    assert(*(int*)queue_front(q) == 10); // front remains first
 
-    // Front after dequeue
     int *popped = dequeue(q);
-    free_int(popped);
+    free(popped);
     assert(*(int*)queue_front(q) == 20);
 
-    // Multiple front calls
     void *f1 = queue_front(q);
     void *f2 = queue_front(q);
     assert(f1 == f2);
 
-    // Front on NULL queue
     assert(queue_front(NULL) == NULL);
 
-    free_queue(q, free_int);
+    free_queue(q);
     printf("queue front test: PASS\n");
 }
 
 void test_free_queue(void) {
-    // Free empty queue
-    queue *q1 = create_queue();
-    assert(free_queue(q1, NULL) == 0);
+    // empty queue
+    queue *q1 = create_test_queue();
+    assert(free_queue(q1) == 0);
 
-    // Free non-empty queue
-    queue *q2 = create_queue();
-    enqueue(q2, make_int(1));
-    enqueue(q2, make_int(2));
-    assert(free_queue(q2, free_int) == 0);
+    // non-empty queue
+    queue *q2 = create_test_queue();
+    int v1 = 1, v2 = 2;
+    enqueue(q2, &v1);
+    enqueue(q2, &v2);
+    assert(free_queue(q2) == 0);
 
-    // Queue with external memory (not owned)
-    queue *q3 = create_queue();
-    enqueue(q3, "text1");
-    enqueue(q3, "text2");
-    assert(free_queue(q3, NULL) == 0);
-
-    // Free NULL queue
-    assert(free_queue(NULL, NULL) == -1);
+    // NULL queue
+    assert(free_queue(NULL) == -1);
 
     printf("free queue test: PASS\n");
 }

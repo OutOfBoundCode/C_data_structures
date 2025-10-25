@@ -5,7 +5,9 @@
 #include <string.h>
 #include "array_list.h"
 
-array_list* create_array_list(ssize_t array_size){
+array_list* create_array_list(ssize_t array_size, alcpy cpy, alfree_element free_element, alcompare compare){
+    if (free_element == NULL || cpy == NULL || compare == NULL) return NULL;
+
     ssize_t size;
     // check if init_size is specified, if it <= 0 a default size of 10 is used
     if (array_size > 0) 
@@ -23,32 +25,33 @@ array_list* create_array_list(ssize_t array_size){
 
     list->length = 0;
     list->max_size = size;
+    list->free_element = free_element;
+    list->compare = compare;
+    list->cpy = cpy;
 
     return list;
 }
 
-void free_array_list(array_list *list, void (*free_element) (void*)){
+void free_array_list(array_list *list){ 
     if (list == NULL) return;
     
     ssize_t current_index = 0;
 
-    if (free_element != NULL){
-       while (current_index < list->length){
-            free_element(list->arr[current_index]);
-            current_index++;
-    }
+    while (current_index < list->length){
+      list->free_element(list->arr[current_index]);
+      current_index++;
     }
     free(list->arr);
     free(list);
 }
 
-ssize_t alget_index(const array_list *list, void *element, int (*compare)(void *, void *)){
-    if (list == NULL || element == NULL || compare == NULL) return -1;
+ssize_t alget_index(const array_list *list, void *element){
+    if (list == NULL || element == NULL) return -1;
    
     ssize_t current_index = 0;
     
     while (current_index < list->length){
-        if (compare(list->arr[current_index], element) == 0)
+        if (list->compare(list->arr[current_index], element) == 0)
             return current_index;
 
         current_index++;
@@ -97,20 +100,25 @@ void alreverse(array_list *list){
 void *alget(const array_list *list, ssize_t index){
     if (list == NULL || index < 0 || index >= list->length) return NULL;
     return list->arr[index];
-}
+}  
 
-int alset(array_list *list, ssize_t index, void *element, void (*free_element) (void*)){
+int alset(array_list *list, ssize_t index, void *element){
     if (list == NULL || element == NULL || index < 0 || index >= list->length) return -1;
+    
+    void* element_copy = list->cpy(element);
 
-    if (free_element != NULL) free_element(list->arr[index]);
+    if (element_copy == NULL) return -1;
 
-    list->arr[index] = element;
+    list->free_element(list->arr[index]);
+
+    list->arr[index] = element_copy;
 
     return 0;
 }
 
 int resize_list(array_list* list, float factor){
     if (list == NULL) return -1;
+
     size_t new_size =  (size_t)(list->max_size * factor);
     
     if (new_size < 1) new_size = 1;
@@ -130,7 +138,11 @@ int alappend(array_list *list, void* element){
     if (list->length >= list->max_size)
         if (resize_list(list, 2) == -1) return -1; // double the array size 
 
-    list->arr[list->length] = element;
+    void* element_copy = list->cpy(element);
+
+    if (element_copy == NULL) return -1;
+
+    list->arr[list->length] = element_copy;
     list->length++;
     
     return 0;
@@ -147,17 +159,21 @@ int aladd(array_list *list, ssize_t index, void* element){
     
     memmove(dest, src, copy_size);
 
-    list->arr[index] = element;
+    void* element_copy = list->cpy(element);
+
+    if (element_copy == NULL) return -1;
+
+    list->arr[index] = element_copy;
     list->length++;
 
     return 0;
 }
 
-int alpop(array_list *list, void (*free_element)(void*)){
+int alpop(array_list *list){
     if (list == NULL) return -1;
     if (list->length <= 0) return -1;
 
-    if (free_element != NULL) free_element(list->arr[list->length-1]);
+    list->free_element(list->arr[list->length-1]);
 
     list->length--;
 
@@ -167,10 +183,10 @@ int alpop(array_list *list, void (*free_element)(void*)){
     return 0;
 }
 
-int aldelete(array_list *list, ssize_t index, void (*free_element)(void*)){
+int aldelete(array_list *list, ssize_t index){
     if (list == NULL || index < 0 || index >= list->length) return -1;
     
-    if (free_element != NULL) free_element(list->arr[index]);
+    list->free_element(list->arr[index]);
 
     void* dest = &list->arr[index];
     void* src = &list->arr[index + 1];

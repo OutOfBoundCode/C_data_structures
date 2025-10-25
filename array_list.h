@@ -2,6 +2,10 @@
 
 #include <sys/types.h>
 
+typedef void* (*alcpy) (void*);
+typedef void (*alfree_element) (void*); 
+typedef int (*alcompare) (void*, void*); 
+
 /**
  * @brief Array list structure.
  */
@@ -9,34 +13,38 @@ typedef struct {
     ssize_t length;      /**< Number of elements currently in the list */
     ssize_t max_size;    /**< Maximum capacity of the array */
     void** arr;          /**< Pointer to the array of element pointers */
+    alcpy cpy;  // a pointer to a copy function that takes a void pointer and return a pointer of the copy of the memory
+    alfree_element free_element; // a pointer to a free function that takes a void pointer and free the pointed to memory
+    alcompare compare;  // a pointer to compare function that takes two element and return 0 on success (the two element match) and -1 on failure.
+
 } array_list;
 
 /**
  * @brief Create a new array list with a specified initial size.
  * @param array_size Initial capacity of the array list.
  * @note if the initial size is <=0 the size of the array will be defaulted to 10
+ * @param cpy a pointer to a copy function that takes void* and return a void pointer to a copy of the memory on success, and return NULL on failure 
+ * @param free_element a pointer to a free function that takes a void pointer and free the pointed memory
+ * @param compare Function pointer to compare the passed element with the list elements and returning the index when there is a match.
+ * @note compare passed function should return 0 on success (the two element match) and -1 on failure.
  * @note the size of the array doubles when full
  * @return Pointer to the newly created array list, or NULL on failure.
  */
-array_list* create_array_list(ssize_t array_size);
+array_list* create_array_list(ssize_t array_size, alcpy cpy, alfree_element free_element, alcompare compare);
 
 /**
  * @brief Free the array list and its elements.
  * @param list Pointer to the array list.
- * @param free_element Function pointer to free the elements (can be NULL).
- * @note If the list owns the memory of elements, pass a valid free_element function; otherwise, pass NULL to avoid freeing memory not owned by the list.
- */
-void free_array_list(array_list *list, void (*free_element) (void*));
+*/
+void free_array_list(array_list *list);
 
 /**
  * @brief Get the index of an element in the array list.
  * @param list Pointer to the array list.
  * @param element Pointer to the element to find.
- * @param compare Function pointer to compare two elements.
- * @note The compare function should return 0 if the elements match, -1 otherwise.
  * @return Index of the element, or -1 if not found.
  */
-ssize_t alget_index(const array_list *list, void* element, int (*compare) (void*, void*));
+ssize_t alget_index(const array_list *list, void* element);
 
 /**
  * @brief Print all elements in the array list.
@@ -64,11 +72,9 @@ void *alget(const array_list *list, ssize_t index);
  * @param list Pointer to the array list.
  * @param index Index of the element to set.
  * @param element Pointer to the new element.
- * @param free_element Function pointer to free the old element (can be NULL).
- * @note The old element pointer will no longer be in the list, so if the list owns it, free it using the provided function; otherwise, pass NULL.
  * @return 0 on success, -1 on failure.
  */
-int alset(array_list *list, ssize_t index, void* element, void (*free_element) (void*));
+int alset(array_list *list, ssize_t index, void* element);
 
 /**
  * @brief Append an element to the end of the array list.
@@ -92,21 +98,17 @@ int aladd(array_list *list, ssize_t index, void* element);
 /**
  * @brief Remove the last element from the array list.
  * @param list Pointer to the array list.
- * @param free_element Function pointer to free the element (can be NULL).
- * @note Memory ownership rules in free_array_list apply here.
  * @return 0 on success, -1 on failure.
  * @note when the length (the count of elements inside) of the array is <= 1/4 max_size the array shrinks to half its size
  */
-int alpop(array_list *list, void (*free_element)(void*));
+int alpop(array_list *list);
 
 /**
  * @brief Delete the element at a specific index.
  * @param list Pointer to the array list.
  * @param index Index of the element to delete.
- * @param free_element Function pointer to free the element (can be NULL).
- * @note Memory ownership rules in free_array_list apply here.
  * @return 0 on success, -1 on failure.
  * @note when the length (the count of elements inside) of the array is <= 1/4 max_size the array shrinks to half its size
  */
-int aldelete(array_list *list, ssize_t index, void (*free_element)(void*));
+int aldelete(array_list *list, ssize_t index);
 

@@ -17,14 +17,12 @@ static node* create_node(void* element){
 }
 
 linked_list* create_linked_list(llcpy cpy, llfree_element free_element, llcompare compare){
+    if (free_element == NULL || cpy == NULL || compare == NULL) return NULL;
+
     linked_list* list = malloc(sizeof(linked_list));
     
     if (list == NULL) return NULL;
-    if (free_element == NULL || cpy == NULL || compare == NULL){
-        free(list);
-        return NULL;
-    }
-    
+   
     list->head = NULL;
     list->tail = NULL;
     list->length = 0;

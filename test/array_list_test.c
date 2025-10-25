@@ -6,15 +6,16 @@
 
 // ----------------- Helper functions -----------------
 
-int *make_element_int(int v) {
-    int *p = malloc(sizeof(int));
-    assert(p != NULL);
-    *p = v;
-    return p;
-}
-
 void free_int(void *p) {
     free(p);
+}
+
+void *copy_int(void *p) {
+    if (!p) return NULL;
+    int *c = malloc(sizeof(int));
+    if (!c) return NULL;
+    *c = *(int*)p;
+    return c;
 }
 
 int compare_int(void *a, void *b) {
@@ -32,275 +33,248 @@ void print_int(void *p) {
 // ----------------- Tests -----------------
 
 void test_create_list() {
-    array_list *list = create_array_list(0); // should default to 10
+    array_list *list = create_array_list(0, copy_int, free_int, compare_int);
     assert(list != NULL);
     assert(list->length == 0);
     assert(list->max_size == 10);
     assert(list->arr != NULL);
 
-    array_list *list2 = create_array_list(5);
+    array_list *list2 = create_array_list(5, copy_int, free_int, compare_int);
     assert(list2 != NULL && list2->max_size == 5);
 
-    free_array_list(list, free_int);
-    free_array_list(list2, free_int);
+    free_array_list(list);
+    free_array_list(list2);
     printf("create list test: PASS\n");
 }
 
 void test_free_list() {
-    array_list *list = create_array_list(2);
+    array_list *list = create_array_list(2, copy_int, free_int, compare_int);
     assert(list != NULL);
-    free_array_list(list, free_int); // free empty list
+    free_array_list(list);
 
-    list = create_array_list(2);
+    list = create_array_list(2, copy_int, free_int, compare_int);
     assert(list != NULL);
-    alappend(list, make_element_int(10));
-    free_array_list(list, free_int); // free a list with single element list
+    int v = 10;
+    alappend(list, &v);
+    free_array_list(list);
 
-    list = create_array_list(2);
+    list = create_array_list(2, copy_int, free_int, compare_int);
     assert(list != NULL);
-    alappend(list, make_element_int(20));
-    alappend(list, make_element_int(20));
-    alappend(list, make_element_int(20));
-    free_array_list(list, free_int); // free a list with multiple elements
+    int x = 20, y = 21, z = 22;
+    alappend(list, &x);
+    alappend(list, &y);
+    alappend(list, &z);
+    free_array_list(list);
 
-    // free NULL pointer
-    free_array_list(NULL, free_int);
+    free_array_list(NULL);
 
-    // free list without freeing elements (not owned memory)
-    list = create_array_list(2);
-    assert(list != NULL);
-    alappend(list, "text1");
-    alappend(list, "text2");
-    free_array_list(list, NULL); // pass free_element NULL to avoid freeing memory not owned by the list
-
-    printf("free list test: PASS\n");
+   printf("free list test: PASS\n");
 }
 
 void test_append() {
-    array_list *list = create_array_list(2);
+    array_list *list = create_array_list(2, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    assert(alappend(list, make_element_int(10)) == 0); // append to empty list
+    int v1 = 10;
+    assert(alappend(list, &v1) == 0);
     assert(*(int*)alget(list, 0) == 10 && list->length == 1);
 
-    assert(alappend(list, make_element_int(20)) == 0); // append to a list with single element
+    int v2 = 20;
+    assert(alappend(list, &v2) == 0);
     assert(*(int*)alget(list, 1) == 20 && list->length == 2);
 
-    // force resize
-    assert(alappend(list, make_element_int(30)) == 0); 
+    int v3 = 30;
+    assert(alappend(list, &v3) == 0);
     assert(list->length == 3);
     assert(list->max_size >= 3);
 
-    // append NULL
-    assert(alappend(list, NULL) == -1); // should refuse and return -1
+    assert(alappend(list, NULL) == -1);
 
-    // append into NULL list
-    int *num = make_element_int(100);
-    assert(alappend(NULL, num) == -1); // should fail and return -1
-    free_int(num);
+    int num = 100;
+    assert(alappend(NULL, &num) == -1);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("append test: PASS\n");
 }
 
 void test_get() {
-    array_list *list = create_array_list(3);
+    array_list *list = create_array_list(3, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    // get from empty list
     assert(alget(list, 0) == NULL);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(20));
-    alappend(list, make_element_int(30));
+    int v1 = 10, v2 = 20, v3 = 30;
+    alappend(list, &v1);
+    alappend(list, &v2);
+    alappend(list, &v3);
 
-    int *val = alget(list, 0); // get element at index 0
+    int *val = alget(list, 0);
     assert(val && *val == 10);
 
-    val = alget(list, list->length - 1); // get element at the end
+    val = alget(list, list->length - 1);
     assert(val && *val == 30);
 
-    val = alget(list, 1); // get from the middle
+    val = alget(list, 1);
     assert(val && *val == 20);
 
-    // out of range
     assert(alget(list, -1) == NULL);
     assert(alget(list, 3) == NULL);
-
-    // NULL list
     assert(alget(NULL, 0) == NULL);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("get test: PASS\n");
 }
 
 void test_set() {
-    array_list *list = create_array_list(3);
+    array_list *list = create_array_list(3, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    int* number = make_element_int(104);
+    int number = 104;
+    assert(alset(list, 0, &number) == -1);
 
-    assert(alset(list, 0, number, free_int) == -1); // set in empty list (should fail and return -1)
+    int v1 = 10, v2 = 20, v3 = 20;
+    alappend(list, &v1);
+    alappend(list, &v2);
+    alappend(list, &v3);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(20));
-    alappend(list, make_element_int(20));
-
-    // valid sets
-    assert(alset(list, 0, make_element_int(100), free_int) == 0); // set at head
+    int n1 = 100;
+    assert(alset(list, 0, &n1) == 0);
     assert(*(int*)alget(list, 0) == 100);
 
-    assert(alset(list, list->length - 1, make_element_int(200), free_int) == 0); // set at end
+    int n2 = 200;
+    assert(alset(list, list->length - 1, &n2) == 0);
     assert(*(int*)alget(list, list->length - 1) == 200);
 
-    assert(alset(list, 1, make_element_int(300), free_int) == 0); // set at the middle
+    int n3 = 300;
+    assert(alset(list, 1, &n3) == 0);
     assert(*(int*)alget(list, 1) == 300);
 
-    // out of range (should fail and return -1)
-    assert(alset(list, -1, number, free_int) == -1);
-    assert(alset(list, 3, number, free_int) == -1);
+    assert(alset(list, -1, &number) == -1);
+    assert(alset(list, 3, &number) == -1);
+    assert(alset(NULL, 0, &number) == -1);
+    assert(alset(list, 0, NULL) == -1);
 
-    // NULL list (should fail and return -1)
-    assert(alset(NULL, 0, number, free_int) == -1);
-
-    // NULL element (should fail and return -1)
-    assert(alset(list, 0, NULL, free_int));
-
-    free(number);
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("set test: PASS\n");
 }
 
 void test_add() {
-    array_list *list = create_array_list(2);
+    array_list *list = create_array_list(2, copy_int, free_int, compare_int);
     assert(list != NULL);
-    
-    int* number = make_element_int(80);
 
-    assert(aladd(list, 1, number) == -1); // add to an empty list at non-zero index (should fail and return -1)
+    int number = 80;
+    assert(aladd(list, 1, &number) == -1);
 
-    assert(aladd(list, 0, make_element_int(70)) == 0); // add to an empty list at 0 (should success and return 0)
+    int v0 = 70;
+    assert(aladd(list, 0, &v0) == 0);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(30));
+    int v1 = 10, v2 = 30;
+    alappend(list, &v1);
+    alappend(list, &v2);
 
-    assert(list->max_size > 2); // test the resize
-    
-    // add at head
-    assert(aladd(list, 0, make_element_int(5)) == 0);
+    assert(list->max_size > 2);
+
+    int vh = 5;
+    assert(aladd(list, 0, &vh) == 0);
     assert(*(int*)alget(list, 0) == 5 && list->length == 4);
-    
-    // add in middle
-    assert(aladd(list, 1, make_element_int(20)) == 0);
+
+    int vm = 20;
+    assert(aladd(list, 1, &vm) == 0);
     assert(*(int*)alget(list, 1) == 20 && list->length == 5);
 
-    // add at tail
-    assert(aladd(list, list->length, make_element_int(40)) == 0);
+    int vt = 40;
+    assert(aladd(list, list->length, &vt) == 0);
     assert(*(int*)alget(list, list->length - 1) == 40);
 
-    // invalid indices (should fail and return -1)
-    assert(aladd(list, -1, number) == -1);
-    assert(aladd(list, list->length + 1, number) == -1);
-
-    // NULL list (should fail and return -1)
-    assert(aladd(NULL, 0, number) == -1);
-
-    // NULL element (should fail and return -1)
+    assert(aladd(list, -1, &number) == -1);
+    assert(aladd(list, list->length + 1, &number) == -1);
+    assert(aladd(NULL, 0, &number) == -1);
     assert(aladd(list, 1, NULL) == -1);
 
-    free(number);
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("add test: PASS\n");
 }
 
 void test_pop() {
-    array_list *list = create_array_list(3);
+    array_list *list = create_array_list(3, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    // empty pop (should fail and return -1)
-    assert(alpop(list, free_int) == -1);
+    assert(alpop(list) == -1);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(10));
+    int v1 = 10, v2 = 10, v3 = 10;
+    alappend(list, &v1);
+    alappend(list, &v2);
+    alappend(list, &v3);
 
-    assert(alpop(list, free_int) == 0); // pop from list with multiple elements
+    assert(alpop(list) == 0);
     assert(list->length == 2);
 
-    assert(alpop(list, free_int) == 0);
+    assert(alpop(list) == 0);
     assert(list->length == 1);
 
-    assert(alpop(list, free_int) == 0); // pop from list with 1 element (list become empty)
+    assert(alpop(list) == 0);
     assert(list->length == 0);
 
+    assert(alpop(NULL) == -1);
 
-    // pop from NULL (should fail and return -1)
-    assert(alpop(NULL, free_int) == -1);
+    char *t = "text";
+    alappend(list, t);
+    assert(alpop(list) == 0);
 
-    // non-owned memory
-    alappend(list, "text");
-    assert(alpop(list, NULL) == 0); // pass free_element NULL to avoid freeing non-owned memory (this also applies to set() since we free the old value)
-
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("pop test: PASS\n");
 }
 
 void test_delete() {
-    array_list *list = create_array_list(5);
+    array_list *list = create_array_list(5, copy_int, free_int, compare_int);
 
-    // delete from empty list
-    assert(aldelete(list, 0, free_int) == -1); // should fail and return -1
+    assert(aldelete(list, 0) == -1);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(20));
-    alappend(list, make_element_int(30));
-    alappend(list, make_element_int(40));
+    int v1 = 10, v2 = 20, v3 = 30, v4 = 40;
+    alappend(list, &v1);
+    alappend(list, &v2);
+    alappend(list, &v3);
+    alappend(list, &v4);
 
-    // delete head [10, 20, 30, 40] => [20, 30, 40]
-    assert(aldelete(list, 0, free_int) == 0);
+    assert(aldelete(list, 0) == 0);
     assert(*(int*)alget(list, 0) == 20 && list->length == 3);
 
-    // delete middle [20, 30, 40] => [20, 40]
-    assert(aldelete(list, 1, free_int) == 0);
+    assert(aldelete(list, 1) == 0);
     assert(*(int*)alget(list, 1) == 40 && list->length == 2);
 
-    // delete last [20, 40] => [20]
-    assert(aldelete(list, list->length - 1, free_int) == 0);
+    assert(aldelete(list, list->length - 1) == 0);
     assert(*(int*)alget(list, 0) == 20 && list->length == 1);
-    
-    // delete from single element list (list become empty)
-    assert(aldelete(list, 0, free_int) == 0);
+
+    assert(aldelete(list, 0) == 0);
     assert(list->length == 0);
 
-    // invalid cases
-    assert(aldelete(list, -1, free_int) == -1);
-    assert(aldelete(list, 1, free_int) == -1);
-    assert(aldelete(NULL, 0, free_int) == -1);
+    assert(aldelete(list, -1) == -1);
+    assert(aldelete(list, 1) == -1);
+    assert(aldelete(NULL, 0) == -1);
 
-    // non-owned memory
-    alappend(list, "text");
-    assert(aldelete(list, 0, NULL) == 0);
+    char *t = "text";
+    alappend(list, t);
+    assert(aldelete(list, 0) == 0);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("delete test: PASS\n");
 }
 
 void test_reverse() {
-    array_list *list = create_array_list(5);
+    array_list *list = create_array_list(5, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    alreverse(list); // reverse empty list
-    
-    alappend(list, make_element_int(40)); 
+    alreverse(list);
 
-    alreverse(list); // reverse a list with single element
-    
+    int v = 40;
+    alappend(list, &v);
+    alreverse(list);
     assert(*(int*)alget(list, 0) == 40);
 
-    alpop(list, free_int);
+    alpop(list);
 
     for (int i = 1; i <= 5; i++) {
-        alappend(list, make_element_int(i));
+        alappend(list, &i);
     }
 
     alreverse(list);
@@ -310,132 +284,118 @@ void test_reverse() {
     assert(*(int*)alget(list, 3) == 2);
     assert(*(int*)alget(list, 4) == 1);
 
-    alreverse(list); // should return the original order
+    alreverse(list);
     assert(*(int*)alget(list, 0) == 1);
     assert(*(int*)alget(list, 1) == 2);
     assert(*(int*)alget(list, 2) == 3);
     assert(*(int*)alget(list, 3) == 4);
     assert(*(int*)alget(list, 4) == 5);
 
-    // reverse NULL
     alreverse(NULL);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("reverse test: PASS\n");
 }
 
 void test_get_index() {
-    array_list *list = create_array_list(3);
+    array_list *list = create_array_list(3, copy_int, free_int, compare_int);
     assert(list != NULL);
 
-    int *a = make_element_int(10);
-    int *b = make_element_int(20);
-    int *c = make_element_int(30);
+    int a = 10, b = 20, c = 30;
+    assert(alget_index(list, &a) == -1);
 
-    assert(alget_index(list, a, compare_int) == -1); // empty list
+    alappend(list, &a);
+    alappend(list, &b);
+    alappend(list, &c);
 
-    alappend(list, a);
-    alappend(list, b);
-    alappend(list, c);
-
-    assert(alget_index(list, a, compare_int) == 0); // element at head
-    assert(alget_index(list, c, compare_int) == 2); // element at the end
-    assert(alget_index(list, b, compare_int) == 1); // element at the middle
+    assert(alget_index(list, &a) == 0);
+    assert(alget_index(list, &c) == 2);
+    assert(alget_index(list, &b) == 1);
 
     int x = 99;
-    assert(alget_index(list, &x, compare_int) == -1); // element doesn't exist (should fail and return -1)
+    assert(alget_index(list, &x) == -1);
 
-    // invalid
-    assert(alget_index(NULL, a, compare_int) == -1); // NULL list (should fail and return -1)
-    assert(alget_index(list, NULL, compare_int) == -1); // NULL element (should fail and return -1)
-    assert(alget_index(list, a, NULL) == -1); // compare is NULL (should fail and return -1)
+    assert(alget_index(NULL, &a) == -1);
+    assert(alget_index(list, NULL) == -1);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("get_index test: PASS\n");
 }
 
 void test_print() {
-    array_list *list = create_array_list(3);
+    array_list *list = create_array_list(3, copy_int, free_int, compare_int);
     assert(list != NULL);
-    
-    // print empty list
+
     printf("Expected [] => ");
     alprint(list, print_int);
 
-    alappend(list, make_element_int(10));
-    alappend(list, make_element_int(20));
+    int v1 = 10, v2 = 20;
+    alappend(list, &v1);
+    alappend(list, &v2);
 
-    // print list with multiple elements
     printf("Expected [10, 20] => ");
     alprint(list, print_int);
 
-    alpop(list, free_int);
+    alpop(list);
 
-    // print single element list
     printf("Expected [10] => ");
     alprint(list, print_int);
 
-    // print NULL list
     printf("Expected [] => ");
     alprint(NULL, print_int);
 
-    // print_element is NULL
     printf("Expected [] => ");
     alprint(list, NULL);
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("print test: PASS\n");
 }
 
 void test_stress_operations() {
-    array_list *list = create_array_list(1);
+    array_list *list = create_array_list(1, copy_int, free_int, compare_int);
 
     const int N = 100;
     for (int i = 0; i < N; i++) {
-        assert(alappend(list, make_element_int(i)) == 0);
+        alappend(list, &i);
     }
     assert(list->length == N);
 
-    // reverse and check
     alreverse(list);
     int *first = alget(list, 0);
     int *last = alget(list, list->length-1);
     assert(first && last);
     assert(*first == N-1 && *last == 0);
 
-    // delete 50 items from middle
     for (int i = 0; i < 50; i++) {
-        assert(aldelete(list, list->length/2, free_int) == 0);
+        assert(aldelete(list, list->length/2) == 0);
     }
 
-    // set values
     for (int i = 0; i < 10; i++) {
-        assert(alset(list, i, make_element_int(i*100), free_int) == 0);
+        assert(alset(list, i, &i) == 0);
     }
 
-    free_array_list(list, free_int);
+    free_array_list(list);
     printf("stress test: PASS\n");
 }
 
 void test_resize_list(){
-    array_list* list = create_array_list(4);
+    array_list* list = create_array_list(4, copy_int, free_int, compare_int);
     assert(list != NULL);
-    assert(list->max_size == 4); // check the initial size
-    
-    // triger resize by adding 5 elements
+    assert(list->max_size == 4);
+
     for (int i = 0; i < 5; i++){
-        alappend(list, make_element_int(i));
+        alappend(list, &i);
     }
 
-    assert(list->max_size == 8); // checks if the max_size doubles
-    
-    alpop(list, free_int); // length 4
-    alpop(list, free_int); // length 3
-    alpop(list, free_int); // length 2
-        
-    assert(list->max_size == 4); // the list should shrink to half
+    assert(list->max_size == 8);
 
-    free_array_list(list, free_int);
+    alpop(list);
+    alpop(list);
+    alpop(list);
+
+    assert(list->max_size == 4);
+
+    free_array_list(list);
     printf("resize test: PASS\n");
 }
 

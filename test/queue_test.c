@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../queue.h"  // your updated queue header
+#include "../queue.h"
 
 /******************* Helper functions *******************/
 

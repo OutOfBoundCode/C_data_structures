@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../stack.h"  // your header file
+#include "../stack.h" 
 
 /******************* Helper functions *******************/
 

@@ -8,6 +8,7 @@ Currently implemented:
 - **Array List** (`array_list.h`)  
 - **Stack** (`stack.h`)  
 - **Queue** (`queue.h`)  
+- **Binary Search Tree** (`bst.h`)
 
 Additional data structures are planned for future releases.
 
@@ -19,8 +20,7 @@ Additional data structures are planned for future releases.
 - [Usage](#usage)  
 - [Memory Management](#memory-management)  
 - [Tests](#tests)  
-- [Notes](#notes)  
-- [Future Plans](#future-plans)  
+- [Notes](#notes)
 
 ---
 
@@ -38,6 +38,7 @@ Additional data structures are planned for future releases.
 
 ```c
 #include "linked_list.h"
+#include <stdio.h>
 
 void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
     int* cpy_int = malloc(sizeof(int));
@@ -75,6 +76,7 @@ int main(){
 
 ```c
 #include "array_list.h"
+#include <stdio.h>
 
 void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
     int* cpy_int = malloc(sizeof(int));
@@ -111,6 +113,7 @@ int main(){
 
 ```c
 #include "stack.h"
+#include <stdio.h>
 
 void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
     int* cpy_int = malloc(sizeof(int));
@@ -149,6 +152,7 @@ int main(){
 
 ```c
 #include "queue.h"
+#include <stdio.h>
 
 void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
     int* cpy_int = malloc(sizeof(int));
@@ -173,6 +177,44 @@ int main(){
     int* dequeued = queue_dequeue(qu); // Ownership transferred to the caller (the user should free it)
     free(dequeued);
     queue_free(qu);
+}
+```
+
+### Binary Search Tree
+
+- Binary Search Tree implementation.
+- Supports basic operations (insertion, deletion, and search).  
+- Generic type support with flexible `void*` element storage.  
+- Make deep copies of the inserted elements.
+- Memory management via custom `free_element` function.
+
+**Example:**
+
+```c
+#include "bst.h"
+#include <stdio.h>
+
+void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
+    int* cpy_int = malloc(sizeof(int));
+    *cpy_int = *(int*) element;
+    return cpy_int;
+}
+
+void free_func(void* element){ // free function takes a pointer to the elements and free its memory
+    free(element);
+}
+
+int compare_func(void* element1, void* element2){ // compare function takes pointers to two elements and return 0 if they match, -1 otherwise
+    return (*(int*)element1 == *(int*)element2? 0 : -1);
+}
+
+int main(){
+    bst* tree = create_bst(cpy_func, free_func, compare_func);
+    int number = 42;
+    bstadd(list, &number); // tree would have a deep copy of number (note: pass a pointer to the data)
+    int search_result = bstsearch(tree, &number); 
+    printf("%d\n", search_result);
+    free_bst(tree);
 }
 ```
 
@@ -213,8 +255,3 @@ gcc -std=c11 -Wall -Wextra -I.. -o ./stack_test ../array_list.c ../stack.c ./sta
 ## notes
 
 - specific details about the APIs are documented in the header file of each data structure.
-
-## future_plans
-
-- After implementing these linear data structures, I will start working on the non-linear ones like tree (specifically BST), hashmap, set, and graph.
-

@@ -9,8 +9,7 @@ Currently implemented:
 - **Stack** (`stack.h`)  
 - **Queue** (`queue.h`)  
 - **Binary Search Tree** (`bst.h`)
-
-Additional data structures are planned for future releases.
+- **Hash Map** `hash_map.h`)
 
 ---
 
@@ -215,6 +214,42 @@ int main(){
     int search_result = bstsearch(tree, &number); 
     printf("%d\n", search_result);
     free_bst(tree);
+}
+```
+
+### Hash Map
+
+- hash map implementation.
+- Supports basic operations (key-value addition, deletion, value retrieval). 
+- Generic type support with flexible `void*` for value storage.
+- uses string keys.
+- uses FNV-1a hash function for hashing.
+- Make deep copies of the inserted elements.
+- Memory management via custom `free_value` function.
+
+**Example:**
+
+```c
+#include "hash_map.h"
+#include <stdio.h>
+
+void* cpy_func(void* element){ // copy function takes a pointer to the element, allocate a heap space, copy the element to the heap, then return the pointer to the copy, this is used to make a deep copies of the inserted elements.
+    int* cpy_int = malloc(sizeof(int));
+    *cpy_int = *(int*) element;
+    return cpy_int;
+}
+
+void free_func(void* element){ // free function takes a pointer to the elements and free its memory
+    free(element);
+}
+
+int main(){
+    hash_map* map = create_hash_map(cpy_func, free_func);
+    int number = 42;
+    hmadd(map, "key_example", &number); // map would make a deep copy of number (note: pass a pointer to the data)
+    int* retrieved = hmget(map, "key_example"); 
+    printf("%d\n", *retrieved);
+    free_hash_map(list);
 }
 ```
 
